@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title><%= title %></title>
+    <link rel='stylesheet' href='/stylesheets/style.css' />
+    <script type="text/javascript" src="/javascripts/jquery-2.1.3.min.js"></script>
+  </head>
+  <body>
+    <section>
+        <h2>当前所有版本</h2>
+        <div class="js_allVersion"></div>
+        <div class="form">
+            <input type="text" name="version" placeholder="版本号" class="js_version">
+            <button class="js_saveVersion">保存</button>
+        </div>
+    </section>
+    <section>
+        <h2>JSON操作</h2>
+        <div class="form">
+            <input type="text" name="version" placeholder="版本号" class="js_version1" value="5.2.0">
+            <select class="js_platform">
+                <option>Android</option>
+                <option>iOS</option>
+            </select>
+            <button class="js_search">查询</button>
+            <button class="js_saveJson">保存</button>
+            <div class="addJson">
+                <input type="text" name="jsonname" class="js_jsonname" placeholder="新增的json key值" value="">
+                <textarea rows="10" class="js_jsonvalue">
+{
+  "data": {
+    "director": [
+      {
+        "name":"一",
+        "um":"454544444444",
+        "amount":"2",
+        "date":"2月18号"
+      },
+      {
+        "name":"二",
+        "um":"454544444444",
+        "amount":"2",
+        "date":"2月18号"
+      },
+      {
+        "name":"三",
+        "um":"454544444444",
+        "amount":"2",
+        "date":"2月18号"
+      }
+    ]
+  },
+  "flag": 1,
+  "msg": "操作成功"
+}
+                </textarea>
+            </div>
+            <div class="js_allJson"></div>
+        </div>
+    </section>
+
+    <script type="text/javascript">
+        function requestData(json) {
+            $.ajax({
+                url: json.api,
+                type: json.type,
+                dataType: 'json',
+                data: json.data,
+                timeout: 30000,
+                success: function(data) {
+                    json.callback(data);
+                },
+                error: function(xhr, errorType, error) {
+                    if(!navigator.onLine || errorType==='timeout') {
+                        alert('网络连接有问题，请检查网络');
+                    } else {
+                        alert(xhr.response);
+                    }
+                }
+            })
+        }
+
+        $(function() {
+            var host = 'http://localhost:3000/';
+
+            // 读取版本列表
+            (function getAppversionList() {
+                var json = {
+                    api: host + 'version',
+                    type: 'get'
+                };
+                var callback = function(res) {
+                    var html = '<table><tr><th>版本号</th><th>平台信息</th><th>操作</th></tr>';
+                    for(var i in res['data']) {
+                        html += '<tr><td><input type="text" value="' + res['data'][i]['version'] + '"></td><td>' + res['data'][i]['platformList'] + '</th><td><button class="js_deleteVersion" data-version="' + res['data'][i]['version'] + '">删除</button><button class="js_updateVersion" data-version="' + res['data'][i]['version'] + '">更新</button></td></tr>';
+                    }
+                    html += '</table>';
+                    $('.js_allVersion').html(html);
+                };
+                json.callback = callback;
+                requestData(json);
+            })();
+
+            // 删除版本
+            $('body').delegate('.js_deleteVersion', 'click', function(e) {
+                var json = {
+                    api: host + 'deleteVersion',
+                    type: 'post',
+                    data: {
+                        version: $(e.currentTarget).data('version')
+                    }
+                };
+                var callback = function(res) {
+                    if(res.status==0) {
+                        alert('删除成功');
+                        // window.location.reload();
+                    } else {
+                        alert(res.msg);
+                    }
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 更新版本
+            $('body').delegate('.js_updateVersion', 'click', function(e) {
+                var json = {
+                    api: host + 'updateVersion',
+                    type: 'post',
+                    data: {
+                        version: $(e.currentTarget).data('version'),
+                        newVersion: $($($(e.currentTarget).parent().parent().children())[0]).children().val()
+                    }
+                };
+                var callback = function(res) {
+                    alert('更新成功');
+                    // window.location.reload();
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 保存新版本
+            $('.js_saveVersion').on('click', function() {
+                var json = {
+                    api: host + 'saveVersion',
+                    type: 'post',
+                    data: {
+                        version: $('.js_version').val()
+                    }
+                };
+                var callback = function(res) {
+                    alert('保存成功');
+                    // window.location.reload();
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 查询json
+            $('.js_search').on('click', function() {
+                var json = {
+                    api: host + 'getAllJson',
+                    type: 'get',
+                    data: {
+                        version: $('.js_version1').val(),
+                        platform: $('.js_platform').val()
+                    }
+                };
+                var callback = function(res) {
+                    var html = '<table class="showJson"><tr><th>key</th><th>value</th><th>操作</th></tr>';
+                    for(var i in res['data']) {
+                        html += '<tr><td><input type="text" value="' + res['data'][i]['jsonName'] + '"></td><td class="jsonValue"><textarea>' + res['data'][i]['jsonValue'] + '</textarea></td><td><button class="js_deleteJson" data-jsonKey="' + res['data'][i]['jsonKey'] + '">删除</button><button class="js_updateJson" data-jsonKey="' + res['data'][i]['jsonKey'] + '">更新</button></td></tr>';
+                    }
+                    html += '</table>';
+                    $('.js_allJson').html(html);
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 新增JSON
+            $('.js_saveJson').on('click', function() {
+                var json = {
+                    api: host + 'saveJson',
+                    type: 'post',
+                    data: {
+                        version: $('.js_version1').val(),
+                        platform: $('.js_platform').val(),
+                        jsonName: $('.js_jsonname').val(),
+                        jsonValue: $('.js_jsonvalue').val()
+                    }
+                };
+                var callback = function(res) {
+                    alert('保存成功，jsonKey为：' + res.data.jsonKey);
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 删除JSON
+            $('body').delegate('.js_deleteJson', 'click', function(e) {
+                var json = {
+                    api: host + 'deleteJson',
+                    type: 'post',
+                    data: {
+                        jsonKey: $(e.currentTarget).data('jsonkey')
+                    }
+                };
+                var callback = function(res) {
+                    if(res.status==0) {
+                        alert('删除成功');
+                        // window.location.reload();
+                    } else {
+                        alert(res.msg);
+                    }
+                };
+                json.callback = callback;
+                requestData(json);
+            });
+
+            // 更新JSON
+            $('body').delegate('.js_updateJson', 'click', function(e) {
+                var json = {
+                    api: host + 'updateJson',
+                    type: 'post',
+                    data: {
+                        version: $('.js_version1').val(),
+                        platform: $('.js_platform').val(),
+                        jsonName: $($($($(e.currentTarget).parent().parent().children()).children())[0]).val(),
+                        jsonValue: $($($($(e.currentTarget).parent().parent().children()).children())[1]).val(),
+                        jsonKey: $(e.currentTarget).data('jsonkey')
+                    }
+                };
+                var callback = function(res) {
+                    alert('更新成功');
+                    // window.location.reload();
+                };
+                json.callback = callback;
+                requestData(json);
+            })
+        })
+    </script>
+  </body>
+</html>

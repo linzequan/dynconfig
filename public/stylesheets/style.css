@@ -1,0 +1,31 @@
+body {
+  padding: 50px;
+  font: 14px "Lucida Grande", Helvetica, Arial, sans-serif;
+}
+
+a {
+  color: #00B7FF;
+}
+
+section {
+    border: 1px solid #eee;
+    padding: 0 10px 15px;
+    margin-bottom: 20px;
+}
+
+.addJson {
+    margin-top: 10px;
+}
+
+.addJson textarea, .addJson input {
+    width: 100%;
+}
+
+.jsonValue {
+    width: 80%;
+}
+
+.showJson textarea {
+    width: 100%;
+    height: 100px;
+}
